@@ -1,0 +1,26 @@
+services:
+  gosmig_test_postgres:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gosmig
+      POSTGRES_USER: gosmig
+      POSTGRES_PASSWORD: gosmig
+    ports:
+      - "5432:5432"
+    volumes:
+      - gosmig_test_postgres_volume:/var/lib/postgresql/data
+      - ./db-init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB'"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - gosmig_test_postgres_network
+
+volumes:
+  gosmig_test_postgres_volume:
+networks:
+  gosmig_test_postgres_network:
