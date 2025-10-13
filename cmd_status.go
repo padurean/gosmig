@@ -58,7 +58,7 @@ func runCmdStatus[
 
 // usePager attempts to pipe output to $PAGER if available and stdout is a TTY.
 // Otherwise it returns stdout.
-func usePager() (io.Writer, func() error) {
+func usePager() (io.Writer, func() error) { // coverage-ignore
 	// Don't use pager if output is redirected/piped
 	if !term.IsTerminal(int(syscall.Stdout)) {
 		return os.Stdout, func() error { return nil }

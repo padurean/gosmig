@@ -45,6 +45,11 @@ jobs:
       - name: Build
         run: make build-only
 
-      - name: Test
-        run: make test
+      - name: Test with coverage
+        run: make test-coverage
+
+      - name: Check test coverage
+        uses: vladopajic/go-test-coverage@v2
+        with:
+          config: ./.testcoverage.yml
 
