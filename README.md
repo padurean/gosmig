@@ -1,4 +1,4 @@
-<img src="gosmig-banner.png" title="GoSMig" alt="GoSMig logo" />
+<img src="graphics/gosmig-banner.png" title="GoSMig" alt="GoSMig logo" />
 
 [![Coverage](https://img.shields.io/badge/coverage-69.4%25-goldenrod?style=flat&labelColor=black&logo=go&logoColor=white&logoSize=auto)](https://github.com/padurean/gosmig/actions/workflows/checks.yml)
 [![Go Test](https://github.com/padurean/gosmig/actions/workflows/checks.yml/badge.svg)](https://github.com/padurean/gosmig/actions/workflows/checks.yml)
