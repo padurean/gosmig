@@ -58,7 +58,7 @@ func dropTables[TDBRow DBRow, TDBResult DBResult, TDBOrTX DBOrTX[TDBRow, TDBResu
 	defer cancel()
 
 	for _, table := range tables {
-		_, err := db.ExecContext(ctx, fmt.Sprintf(`DROP TABLE %s`, table))
+		_, err := db.ExecContext(ctx, fmt.Sprintf(`DROP TABLE IF EXISTS %s`, table))
 		assert.NoError(t, err, fmt.Sprintf("failed to drop table %q", table))
 	}
 }

@@ -19,8 +19,6 @@ const (
 	cmdDown    = "down"
 	cmdStatus  = "status"
 	cmdVersion = "version"
-
-	defaultTimeout = 10 * time.Second
 )
 
 var allCommands = []string{
@@ -47,8 +45,8 @@ var allCommands = []string{
 //   - migrations: A slice of Migration objects defining the database migrations.
 //   - connectToDB: A function that takes a database URL and a timeout duration,
 //     and returns a connected database instance or an error.
-//   - timeout: A duration specifying the timeout for database operations. If zero
-//     or negative, a default timeout of 10 seconds is used.
+//   - config: A Config struct specifying the configuration options, such as timeout duration
+//     for database operations. If nil, default configuration is used.
 //
 // Returns:
 //   - A function that executes the migration tool when called.
@@ -86,7 +84,7 @@ var allCommands = []string{
 //			},
 //		}
 //
-//		goSMig, err := gosmig.New(migrations, connectToDBFunc, 10*time.Second)
+//		goSMig, err := gosmig.New(migrations, connectToDBFunc, nil)
 //		if err != nil {
 //		    log.Fatalf("Failed to create gosmig instance: %v", err)
 //		}
@@ -124,18 +122,20 @@ func New[
 
 	migrations []Migration[TDBRow, TDBResult, TTX, TTXO, TDB],
 	connectToDB func(url string, timeout time.Duration) (TDB, error),
-	timeout time.Duration,
-) (func(), error) {
+	config *Config,
+) (func(), error) { // coverage-ignore
 
-	if timeout <= 0 {
-		timeout = defaultTimeout
+	if config == nil {
+		config = DefaultConfig()
+	} else {
+		config.EnsureDefaults()
 	}
 
 	getArgs := func() []string {
 		return os.Args[1:]
 	}
 
-	return newGosmig(migrations, connectToDB, timeout, getArgs, os.Exit, os.Stdout, os.Stderr)
+	return newGosmig(migrations, connectToDB, config, getArgs, os.Exit, os.Stdout, os.Stderr)
 }
 
 func newGosmig[
@@ -147,7 +147,7 @@ func newGosmig[
 
 	migrations []Migration[TDBRow, TDBResult, TTX, TTXO, TDB],
 	connectToDB func(url string, timeout time.Duration) (TDB, error),
-	timeout time.Duration,
+	config *Config,
 	getArgs func() []string,
 	osExit func(int),
 	out, errOut io.Writer,
@@ -157,10 +157,20 @@ func newGosmig[
 		return nil, fmt.Errorf("no migrations provided")
 	}
 
+	migVersionCounters := make(map[int]int)
+
 	var validationErrs []string
 	for _, mig := range migrations {
+		migVersionCounters[mig.Version]++
 		if err := mig.validate(); err != nil {
 			validationErrs = append(validationErrs, err.Error())
+		}
+	}
+
+	for version, count := range migVersionCounters {
+		if count > 1 {
+			validationErrs = append(validationErrs,
+				fmt.Sprintf("migration version %d is defined %d times", version, count))
 		}
 	}
 
@@ -181,7 +191,7 @@ func newGosmig[
 
 		ctx := context.Background()
 
-		db, err := connectToDB(url, timeout)
+		db, err := connectToDB(url, config.Timeout)
 		if err != nil {
 			errExit(errExitCode+2, err, errOut, osExit)
 		}
@@ -191,29 +201,29 @@ func newGosmig[
 			}
 		}()
 
-		if err := createMigrationsTableIfNotExists(ctx, db, timeout); err != nil {
+		if err := createMigrationsTableIfNotExists(ctx, db, config.Timeout); err != nil {
 			errExit(errExitCode+4, err, errOut, osExit)
 		}
 
 		switch command {
 		case cmdUp:
-			if err := runCmdUp(ctx, migrations, db, out, 0, timeout); err != nil {
+			if err := runCmdUp(ctx, migrations, db, out, 0, config.Timeout); err != nil {
 				errExit(errExitCode+5, err, errOut, osExit)
 			}
 		case cmdUpOne:
-			if err := runCmdUp(ctx, migrations, db, out, 1, timeout); err != nil {
+			if err := runCmdUp(ctx, migrations, db, out, 1, config.Timeout); err != nil {
 				errExit(errExitCode+6, err, errOut, osExit)
 			}
 		case cmdDown:
-			if err := runCmdDown(ctx, migrations, db, out, timeout); err != nil {
+			if err := runCmdDown(ctx, migrations, db, out, config.Timeout); err != nil {
 				errExit(errExitCode+7, err, errOut, osExit)
 			}
 		case cmdStatus:
-			if err := runCmdStatus(ctx, migrations, db, out, timeout); err != nil {
+			if err := runCmdStatus(ctx, migrations, db, out, config.Timeout); err != nil {
 				errExit(errExitCode+8, err, errOut, osExit)
 			}
 		case cmdVersion:
-			if err := runCmdVersion(ctx, db, out, timeout); err != nil {
+			if err := runCmdVersion(ctx, db, out, config.Timeout); err != nil {
 				errExit(errExitCode+9, err, errOut, osExit)
 			}
 		default:

@@ -89,7 +89,7 @@ func main() {
     }
 
     // Create the migration tool
-    migrate, err := gosmig.New(migrations, connectToDB, 10*time.Second)
+    migrate, err := gosmig.New(migrations, connectToDB, nil)
     if err != nil {
         log.Fatalf("Failed to create migration tool: %v", err)
     }
@@ -167,7 +167,7 @@ func main() {
         },
     }
 
-    migrate, err := gosmig.New(migrations, connectToSQLXDB, 10*time.Second)
+    migrate, err := gosmig.New(migrations, connectToSQLXDB, nil)
     if err != nil {
         log.Fatalf("Failed to create migration tool: %v", err)
     }
@@ -276,10 +276,10 @@ Use `UpDownNoTX` for migrations that cannot or should not run in a transaction, 
 Configure operation timeouts when creating the migration tool:
 
 ```go
-migrate, err := gosmig.New(migrations, connectToDB, 30*time.Second) // 30 second timeout
+migrate, err := gosmig.New(migrations, connectToDB, &gosmig.Config{Timeout: 30 * time.Second})
 ```
 
-If you pass `0` or a negative duration, the default timeout of 10 seconds will be used.
+If you pass **`0`** or a **negative** duration, the default timeout of **10 seconds** will be used.
 
 ### Database Connection
 
@@ -421,7 +421,7 @@ type UpDown[TDBRow, TDBResult, TDBOrTX] struct {
 func New[TDBRow, TDBResult, TTX, TTXO, TDB](
     migrations []Migration[TDBRow, TDBResult, TTX, TTXO, TDB],
     connectToDB func(url string, timeout time.Duration) (TDB, error),
-    timeout time.Duration,
+    config *Config,
 ) (func(), error)
 ```
 
