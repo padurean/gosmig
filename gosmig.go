@@ -125,12 +125,6 @@ func New[
 	config *Config,
 ) (func(), error) { // coverage-ignore
 
-	if config == nil {
-		config = DefaultConfig()
-	} else {
-		config.EnsureDefaults()
-	}
-
 	getArgs := func() []string {
 		return os.Args[1:]
 	}
@@ -157,28 +151,34 @@ func newGosmig[
 		return nil, fmt.Errorf("no migrations provided")
 	}
 
-	migVersionCounters := make(map[int]int)
-
-	var validationErrs []string
-	for _, mig := range migrations {
-		migVersionCounters[mig.Version]++
-		if err := mig.validate(); err != nil {
-			validationErrs = append(validationErrs, err.Error())
-		}
+	if connectToDB == nil {
+		return nil, fmt.Errorf("connectToDB function is nil")
 	}
 
-	for version, count := range migVersionCounters {
-		if count > 1 {
-			validationErrs = append(validationErrs,
-				fmt.Sprintf("migration version %d is defined %d times", version, count))
-		}
+	if config == nil {
+		config = DefaultConfig()
+	} else {
+		config.EnsureDefaults()
 	}
 
-	if len(validationErrs) > 0 {
-		return nil, fmt.Errorf(
-			"invalid %s: %s",
-			singularOrPlural("migration", len(validationErrs)),
-			strings.Join(validationErrs, ", "))
+	if getArgs == nil {
+		return nil, fmt.Errorf("getArgs function is nil")
+	}
+
+	if osExit == nil {
+		return nil, fmt.Errorf("osExit function is nil")
+	}
+
+	if out == nil {
+		return nil, fmt.Errorf("out writer is nil")
+	}
+
+	if errOut == nil {
+		return nil, fmt.Errorf("errOut writer is nil")
+	}
+
+	if err := validateMigrations(migrations); err != nil {
+		return nil, err
 	}
 
 	return func() {
@@ -187,6 +187,7 @@ func newGosmig[
 		url, command, err := parseArgs(getArgs())
 		if err != nil {
 			errExit(errExitCode+1, err, errOut, osExit)
+			return
 		}
 
 		ctx := context.Background()
@@ -194,40 +195,46 @@ func newGosmig[
 		db, err := connectToDB(url, config.Timeout)
 		if err != nil {
 			errExit(errExitCode+2, err, errOut, osExit)
+			return
 		}
 		defer func() {
 			if err := db.Close(); err != nil {
 				errExit(errExitCode+3, err, errOut, osExit)
+				return
 			}
 		}()
 
 		if err := createMigrationsTableIfNotExists(ctx, db, config.Timeout); err != nil {
 			errExit(errExitCode+4, err, errOut, osExit)
+			return
 		}
 
 		switch command {
 		case cmdUp:
 			if err := runCmdUp(ctx, migrations, db, out, 0, config.Timeout); err != nil {
 				errExit(errExitCode+5, err, errOut, osExit)
+				return
 			}
 		case cmdUpOne:
 			if err := runCmdUp(ctx, migrations, db, out, 1, config.Timeout); err != nil {
 				errExit(errExitCode+6, err, errOut, osExit)
+				return
 			}
 		case cmdDown:
 			if err := runCmdDown(ctx, migrations, db, out, config.Timeout); err != nil {
 				errExit(errExitCode+7, err, errOut, osExit)
+				return
 			}
 		case cmdStatus:
 			if err := runCmdStatus(ctx, migrations, db, out, config.Timeout); err != nil {
 				errExit(errExitCode+8, err, errOut, osExit)
+				return
 			}
 		case cmdVersion:
 			if err := runCmdVersion(ctx, db, out, config.Timeout); err != nil {
 				errExit(errExitCode+9, err, errOut, osExit)
+				return
 			}
-		default:
-			errExit(errExitCode+10, fmt.Errorf("unknown command: %q", command), errOut, osExit)
 		}
 	}, nil
 }

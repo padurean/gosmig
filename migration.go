@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"slices"
+	"strings"
 )
 
 type (
@@ -55,6 +56,43 @@ func (m Migration[TDBRow, TDBResult, TTX, TTXO, TDB]) validate() error {
 				"migration %d UpDownNoTX must have both Up and Down functions defined",
 				m.Version)
 		}
+	}
+
+	return nil
+}
+
+func validateMigrations[
+	TDBRow DBRow,
+	TDBResult DBResult,
+	TTX TX[TDBRow, TDBResult],
+	TTXO TXOptions,
+	TDB DB[TDBRow, TDBResult, TTX, TTXO]](
+
+	migrations []Migration[TDBRow, TDBResult, TTX, TTXO, TDB],
+) error {
+
+	migVersionCounters := make(map[int]int)
+
+	var migValidationErrs []string
+	for _, mig := range migrations {
+		migVersionCounters[mig.Version]++
+		if err := mig.validate(); err != nil {
+			migValidationErrs = append(migValidationErrs, err.Error())
+		}
+	}
+
+	for version, count := range migVersionCounters {
+		if count > 1 {
+			migValidationErrs = append(migValidationErrs,
+				fmt.Sprintf("migration version %d is defined %d times", version, count))
+		}
+	}
+
+	if len(migValidationErrs) > 0 {
+		return fmt.Errorf(
+			"invalid %s: %s",
+			singularOrPlural("migration", len(migValidationErrs)),
+			strings.Join(migValidationErrs, "; "))
 	}
 
 	return nil

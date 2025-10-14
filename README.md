@@ -1,6 +1,6 @@
 <img src="graphics/gosmig-banner.png" title="GoSMig" alt="GoSMig logo" />
 
-[![Coverage](https://img.shields.io/badge/coverage-69.4%25-goldenrod?style=flat&labelColor=black&logo=go&logoColor=white&logoSize=auto)](https://github.com/padurean/gosmig/actions/workflows/checks.yml)
+[![Coverage](https://img.shields.io/badge/coverage-89.3%25-goldenrod?style=flat&labelColor=black&logo=go&logoColor=white&logoSize=auto)](https://github.com/padurean/gosmig/actions/workflows/checks.yml)
 [![Go Test](https://github.com/padurean/gosmig/actions/workflows/checks.yml/badge.svg)](https://github.com/padurean/gosmig/actions/workflows/checks.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/padurean/gosmig)](https://goreportcard.com/report/github.com/padurean/gosmig)
 [![Go Reference](https://pkg.go.dev/badge/github.com/padurean/gosmig.svg)](https://pkg.go.dev/github.com/padurean/gosmig)

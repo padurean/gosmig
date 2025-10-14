@@ -35,7 +35,7 @@ func TestGosmig_StdLibSQL(t *testing.T) {
 				t, fmt.Sprintf("osExit called with code %d", code), "Error output:\n%s", errW.String())
 		}
 		goSMig, err := newGosmig(
-			migrations, connectToDB_StdLibSQL, DefaultConfig(), getArgs, osExit, &outW, &errW)
+			migrations, connectToDB_StdLibSQL, nil, getArgs, osExit, &outW, &errW)
 		require.NoError(t, err)
 		goSMig()
 	}
@@ -124,7 +124,7 @@ func TestGosmig_SQLX(t *testing.T) {
 				t, "osExit called with code %d. Error output:\n%s", code, errW.String())
 		}
 		goSMig, err := newGosmig(
-			migrations, connectToDB_SQLX, DefaultConfig(), getArgs, osExit, &outW, &errW)
+			migrations, connectToDB_SQLX, nil, getArgs, osExit, &outW, &errW)
 		require.NoError(t, err)
 		goSMig()
 	}
