@@ -19,7 +19,7 @@ Can be used with any database library that implements the standard interfaces.
 
 ## Features
 
-- [x] **Database Agnostic** - Works with any database that implements Go's standard `database/sql` interfaces
+- [x] **Database Agnostic** - Works with any database that implements a subset of Go's standard `database/sql` interfaces (see the  [Core Types](#core-types) section lower for more details)
 - [x] **Type-Safe** - Full Go generics support for compile-time type safety
 - [x] **Flexible** - Supports both transactional and non-transactional migrations
 - [x] **Simple** - Minimal API with clear semantics
@@ -403,16 +403,59 @@ gosmig works with any database that implements Go's standard `database/sql` inte
 ### Core Types
 
 ```go
-type Migration[TDBRow, TDBResult, TTX, TTXO, TDB] struct {
-    Version    int
-    UpDown     *UpDown[TDBRow, TDBResult, TTX]     // Transactional migration
-    UpDownNoTX *UpDown[TDBRow, TDBResult, TDB]     // Non-transactional migration
-}
+type (
+    // Interfaces for database operations (subset of database/sql).
+    // database/sql and sqlx satisfy these interfaces out of the box.
+    // It should be possible to use any database library (wrapper) that satisfies them.
 
-type UpDown[TDBRow, TDBResult, TDBOrTX] struct {
-    Up   func(ctx context.Context, dbOrTx TDBOrTX) error
-    Down func(ctx context.Context, dbOrTx TDBOrTX) error
-}
+    DBRow interface {
+        Scan(dest ...any) error
+        Err() error
+    }
+
+    DBResult interface {
+        LastInsertId() (int64, error)
+        RowsAffected() (int64, error)
+    }
+
+    DBOrTX[TDBRow DBRow, TDBResult DBResult] interface {
+        QueryRowContext(context.Context, string, ...any) TDBRow
+        ExecContext(context.Context, string, ...any) (TDBResult, error)
+    }
+
+    TXOptions interface{}
+
+    TX[TDBRow DBRow, TDBResult DBResult] interface {
+        QueryRowContext(context.Context, string, ...any) TDBRow
+        ExecContext(context.Context, string, ...any) (TDBResult, error)
+        Commit() error
+        Rollback() error
+    }
+
+    DB[TDBRow DBRow, TDBResult DBResult, TTX TX[TDBRow, TDBResult], TTXO TXOptions] interface {
+        QueryRowContext(context.Context, string, ...any) TDBRow
+        ExecContext(context.Context, string, ...any) (TDBResult, error)
+        BeginTx(context.Context, TTXO) (TTX, error)
+        Close() error
+    }
+
+    // Migration and related types
+
+    UpDown[TDBRow DBRow, TDBResult DBResult, TDBOrTX DBOrTX[TDBRow, TDBResult]] struct {
+        Up   func(ctx context.Context, tx TDBOrTX) error
+        Down func(ctx context.Context, tx TDBOrTX) error
+    }
+
+    Migration[TDBRow DBRow, TDBResult DBResult, TTX TX[TDBRow, TDBResult], TTXO TXOptions, TDB DB[TDBRow, TDBResult, TTX, TTXO]] struct {
+        Version    int
+        UpDown     *UpDown[TDBRow, TDBResult, TTX]
+        UpDownNoTX *UpDown[TDBRow, TDBResult, TDB]
+    }
+
+    MigrationSQL  = Migration[*sql.Row, sql.Result, *sql.Tx, *sql.TxOptions, *sql.DB]
+    UpDownSQL     = UpDown[*sql.Row, sql.Result, *sql.Tx]   // Transactional migration
+    UpDownNoTXSQL = UpDown[*sql.Row, sql.Result, *sql.DB]   // Non-transactional migration
+)
 ```
 
 ### Main Function
