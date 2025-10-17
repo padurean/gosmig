@@ -212,7 +212,7 @@ func TestNewGosmig(t *testing.T) {
 			Return(new(dbResultMock), errCreateMigrationsTable)
 		dbMockInstance.On("Close").Return(errCloseDB)
 
-		migrations := []Migration[*dbRowMock, *dbResultMock, *txMock, txOptionsMock, *dbMock]{
+		migrations := []migrationMock{
 			{
 				Version: 1,
 				UpDown: &UpDown[*dbRowMock, *dbResultMock, *txMock]{
@@ -278,7 +278,7 @@ func TestNewGosmig(t *testing.T) {
 			}
 
 			wantUpOrDownErr := fmt.Errorf("some error in %s", cmd)
-			migrations := []Migration[*dbRowMock, *dbResultMock, *txMock, txOptionsMock, *dbMock]{
+			migrations := []migrationMock{
 				{
 					Version: 1,
 					UpDown: &UpDown[*dbRowMock, *dbResultMock, *txMock]{

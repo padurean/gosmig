@@ -34,7 +34,7 @@ func runCmdStatus[
 	}
 
 	w := output
-	if output == os.Stdout {
+	if output == os.Stdout { // coverage-ignore
 		var cleanupPager func() error
 		w, cleanupPager = usePager()
 		defer func() {

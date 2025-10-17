@@ -11,21 +11,15 @@ profile: cover.out
 threshold:
   # (optional; default 0)
   # Minimum coverage percentage required for individual files.
-  # TODO OGG NOW: put back
-  # file: 70
-  file: 20
+  file: 90
 
   # (optional; default 0)
   # Minimum coverage percentage required for each package.
-  # TODO OGG NOW: put back
-  # package: 80
-  package: 20
+  package: 90
 
   # (optional; default 0)
   # Minimum overall project coverage percentage required.
-  # TODO OGG NOW: put back
-  # total: 95
-  total: 65
+  total: 95
 
 # Holds regexp rules which will override thresholds for matched files or packages
 # using their paths.

@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-const migrationsTableName = "gosmig"
-
 type (
 	DBRow interface {
 		Scan(dest ...any) error
@@ -41,17 +39,25 @@ type (
 	}
 )
 
+const (
+	migrationsTableName = "gosmig"
+
+	// SQL statements
+	createMigsTblSQL = `CREATE TABLE IF NOT EXISTS ` + migrationsTableName +
+		` (
+		version INTEGER PRIMARY KEY,
+		applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+	)`
+	selectDBVersionSQL  = "SELECT COALESCE(MAX(version), 0) FROM " + migrationsTableName
+	insertMigVersionSQL = "INSERT INTO " + migrationsTableName + " (version) VALUES ($1)"
+	deleteMigVersionSQL = "DELETE FROM " + migrationsTableName + " WHERE version = $1"
+)
+
 func createMigrationsTableIfNotExists[TDBRow DBRow, TDBResult DBResult](
 	ctx context.Context,
 	dbOrTX DBOrTX[TDBRow, TDBResult],
 	timeout time.Duration,
 ) error {
-
-	const createMigsTblSQL = `CREATE TABLE IF NOT EXISTS ` + migrationsTableName +
-		` (
-		version INTEGER PRIMARY KEY,
-		applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-	)`
 
 	ctxCreateMigsTbl, cancelCreateMigsTable := context.WithTimeout(ctx, timeout)
 	defer cancelCreateMigsTable()
@@ -70,7 +76,6 @@ func getDBVersion[TDBRow DBRow, TDBResult DBResult](
 	timeout time.Duration,
 ) (int, error) {
 
-	const selectDBVersionSQL = "SELECT COALESCE(MAX(version), 0) FROM " + migrationsTableName
 	ctxGetDBVersion, cancelGetDBVersion := context.WithTimeout(ctx, timeout)
 	defer cancelGetDBVersion()
 	var dbVersion int
@@ -89,7 +94,6 @@ func insertDBVersion[TDBRow DBRow, TDBResult DBResult](
 	timeout time.Duration,
 ) error {
 
-	insertMigVersionSQL := "INSERT INTO " + migrationsTableName + " (version) VALUES ($1)"
 	versionCtx, cancelVersion := context.WithTimeout(ctx, timeout)
 	defer cancelVersion()
 	_, err := dbOrTX.ExecContext(versionCtx, insertMigVersionSQL, version)
@@ -109,7 +113,6 @@ func deleteDBVersion[TDBRow DBRow, TDBResult DBResult](
 	timeout time.Duration,
 ) error {
 
-	var deleteMigVersionSQL = "DELETE FROM " + migrationsTableName + " WHERE version = $1"
 	versionCtx, cancelVersion := context.WithTimeout(ctx, timeout)
 	defer cancelVersion()
 	_, err := dbOrTX.ExecContext(versionCtx, deleteMigVersionSQL, version)

@@ -64,10 +64,7 @@ func runCmdUp[
 		return nil
 	}
 
-	_, _ = fmt.Fprintf(
-		output,
-		"%d %s applied\n",
-		nbAppliedMigrations, singularOrPlural("migration", nbAppliedMigrations))
+	_, _ = fmt.Fprintf(output, "%d migration(s) applied\n", nbAppliedMigrations)
 
 	return nil
 }

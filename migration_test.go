@@ -174,7 +174,7 @@ func TestValidateMigrations(t *testing.T) {
 	testCases := []struct {
 		name       string
 		migrations []MigrationSQL
-		wantErr    string
+		wantErrs   []string
 	}{
 		{
 			name: "valid multiple migrations",
@@ -227,7 +227,9 @@ func TestValidateMigrations(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "migration version 1 is defined 2 times",
+			wantErrs: []string{
+				"invalid migration(s): migration version 1 is defined 2 times",
+			},
 		},
 		{
 			name: "multiple duplicate versions",
@@ -261,7 +263,11 @@ func TestValidateMigrations(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "invalid migrations:",
+			wantErrs: []string{
+				"invalid migration(s): ",
+				"migration version 1 is defined 2 times",
+				"migration version 2 is defined 2 times",
+			},
 		},
 		{
 			name: "triplicate migration version",
@@ -288,7 +294,9 @@ func TestValidateMigrations(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "migration version 5 is defined 3 times",
+			wantErrs: []string{
+				"invalid migration(s): migration version 5 is defined 3 times",
+			},
 		},
 		{
 			name: "multiple invalid migrations propagates individual errors",
@@ -311,10 +319,12 @@ func TestValidateMigrations(t *testing.T) {
 					Version: 2,
 				},
 			},
-			wantErr: "invalid migrations: " +
-				"migration version must be > 0; " +
-				"migration 1 UpDown must have both Up and Down functions defined; " +
+			wantErrs: []string{
+				"invalid migration(s): ",
+				"migration version must be > 0",
+				"migration 1 UpDown must have both Up and Down functions defined",
 				"migration 2 must have UpDown xor UpDownNoTX fields defined",
+			},
 		},
 		{
 			name: "duplicate version combined with invalid migration",
@@ -341,15 +351,21 @@ func TestValidateMigrations(t *testing.T) {
 					},
 				},
 			},
-			wantErr: "invalid migrations:",
+			wantErrs: []string{
+				"invalid migration(s):",
+				"migration version 1 is defined 2 times",
+				"migration 2 UpDown must have both Up and Down functions defined",
+			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := validateMigrations(tc.migrations)
-			if tc.wantErr != "" {
-				require.ErrorContains(t, err, tc.wantErr)
+			if len(tc.wantErrs) > 0 {
+				for _, wantErr := range tc.wantErrs {
+					require.ErrorContains(t, err, wantErr)
+				}
 				return
 			}
 			require.NoError(t, err)

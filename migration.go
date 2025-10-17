@@ -90,9 +90,7 @@ func validateMigrations[
 
 	if len(migValidationErrs) > 0 {
 		return fmt.Errorf(
-			"invalid %s: %s",
-			singularOrPlural("migration", len(migValidationErrs)),
-			strings.Join(migValidationErrs, "; "))
+			"invalid migration(s): %s", strings.Join(migValidationErrs, "; "))
 	}
 
 	return nil

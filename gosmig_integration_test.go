@@ -201,7 +201,7 @@ func testGosmig[TDB DB[*sql.Row, sql.Result, *sql.Tx, *sql.TxOptions]](
 
 	expectedOut := `✅ Applied migration version 1
 ✅ Applied migration version 2
-2 migrations applied
+2 migration(s) applied
 `
 	require.Equal(t, expectedOut, outW.String())
 	require.Empty(t, errW.String())
@@ -212,7 +212,7 @@ func testGosmig[TDB DB[*sql.Row, sql.Result, *sql.Tx, *sql.TxOptions]](
 	runCmd(migrations2, "up")
 
 	expectedOut = `✅ Applied migration version 3
-1 migration applied
+1 migration(s) applied
 `
 	require.Equal(t, expectedOut, outW.String())
 	require.Empty(t, errW.String())
@@ -274,7 +274,7 @@ func testGosmig[TDB DB[*sql.Row, sql.Result, *sql.Tx, *sql.TxOptions]](
 	runCmd(allAppliedMigrations, "up-one")
 
 	expectedOut = `✅ Applied migration version 3
-1 migration applied
+1 migration(s) applied
 `
 	require.Equal(t, expectedOut, outW.String())
 	require.Empty(t, errW.String())

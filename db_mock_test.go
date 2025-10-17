@@ -36,21 +36,20 @@ func (r *dbResultMock) RowsAffected() (int64, error) {
 	return args.Get(0).(int64), args.Error(1)
 }
 
-// TODO OGG NOW: uncomment if needed
-// // implements the DBOrTX interface
-// type dbOrTxMock struct {
-// 	mock.Mock
-// }
+// implements the DBOrTX interface
+type dbOrTxMock struct {
+	mock.Mock
+}
 
-// func (d *dbOrTxMock) QueryRowContext(ctx context.Context, query string, args ...any) *dbRowMock {
-// 	calledArgs := d.Called(append([]any{ctx, query}, args...)...)
-// 	return calledArgs.Get(0).(*dbRowMock)
-// }
+func (d *dbOrTxMock) QueryRowContext(ctx context.Context, query string, args ...any) *dbRowMock {
+	calledArgs := d.Called(append([]any{ctx, query}, args...)...)
+	return calledArgs.Get(0).(*dbRowMock)
+}
 
-// func (d *dbOrTxMock) ExecContext(ctx context.Context, query string, args ...any) (*dbResultMock, error) {
-// 	calledArgs := d.Called(append([]any{ctx, query}, args...)...)
-// 	return calledArgs.Get(0).(*dbResultMock), calledArgs.Error(1)
-// }
+func (d *dbOrTxMock) ExecContext(ctx context.Context, query string, args ...any) (*dbResultMock, error) {
+	calledArgs := d.Called(append([]any{ctx, query}, args...)...)
+	return calledArgs.Get(0).(*dbResultMock), calledArgs.Error(1)
+}
 
 // implements the TXOptions interface
 type txOptionsMock struct{}
@@ -104,3 +103,6 @@ func (d *dbMock) Close() error {
 	args := d.Called()
 	return args.Error(0)
 }
+
+// Migration mock
+type migrationMock = Migration[*dbRowMock, *dbResultMock, *txMock, txOptionsMock, *dbMock]
