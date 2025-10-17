@@ -23,10 +23,18 @@ Can be used with any database library that implements the standard interfaces.
 - [x] **Type-Safe** - Full Go generics support for compile-time type safety
 - [x] **Flexible** - Supports both transactional and non-transactional migrations
 - [x] **Simple** - Minimal API with clear semantics
-- [x] **CLI-Ready** - Built-in command-line interface
+- [x] **CLI-Ready** - No actual CLI is provided, but a built-in command-line interface handler makes it easy to build your own CLI tool
+- [x] **Timeouts** - Configurable operation timeouts
+- [x] **Robust Error Handling** - Validation, version conflict detection, transaction safety, and clear error messages
 - [x] **Rollback Support** - Safe migration rollbacks
 - [x] **Status Tracking** - View migration status with paging support
 - [x] **Tested** - Comprehensive test suite with PostgreSQL integration tests
+- [x] **Zero Dependencies** - No external dependencies, only the Go standard library (and [golang.org/x/term](https://pkg.go.dev/golang.org/x/term) for pager support - i.e. for pagination - in the `status` command output)
+
+**ℹ️ NOTEs**:
+
+- You will need a database driver (e.g., [**`pgx`**](https://github.com/jackc/pgx) for PostgreSQL) and optionally [**`sqlx`**](https://github.com/jmoiron/sqlx).
+- These are not dependencies of gosmig itself: while [**`pgx`**](https://github.com/jackc/pgx) and [**`sqlx`**](https://github.com/jmoiron/sqlx) show up in [go.mod](go.mod), they are used only in the examples and tests - gosmig does not actually depend on them.
 
 ## Installation
 
@@ -196,24 +204,60 @@ func connectToSQLXDB(url string, timeout time.Duration) (*sqlx.DB, error) {
 
 Once you've built your migration tool, use it from the command line:
 
-```bash
+### Migrate Up
+
+```console
 # Apply all pending migrations
 ./your-migration-tool "postgres://user:pass@localhost:5432/dbname?sslmode=disable" up
 
+✅ Applied migration version 1
+✅ Applied migration version 2
+✅ Applied migration version 3
+3 migration(s) applied
+```
+
+### Migrate Up One
+
+```console
 # Apply only the next migration
 ./your-migration-tool "postgres://user:pass@localhost:5432/dbname?sslmode=disable" up-one
 
+✅ Applied migration version 4
+1 migration(s) applied
+```
+
+### Migrate Down (One)
+
+```console
 # Roll back the last migration
 ./your-migration-tool "postgres://user:pass@localhost:5432/dbname?sslmode=disable" down
 
+✅ 🔄 Rolled back migration version 4
+```
+
+### Check Migration Status
+
+```console
 # Check migration status
 ./your-migration-tool "postgres://user:pass@localhost:5432/dbname?sslmode=disable" status
 
-# Get current database version
-./your-migration-tool "postgres://user:pass@localhost:5432/dbname?sslmode=disable" version
+VERSION    STATUS
+3          🔲 PENDING
+2          ✅ APPLIED
+1          ✅ APPLIED
 ```
 
-## Commands
+### Get Current Database Version
+
+```console
+# Get current database version
+./your-migration-tool "postgres://user:pass@localhost:5432/dbname?sslmode=disable" version
+
+Current database version:
+5
+```
+
+## Commands Summary
 
 | Command | Description |
 |---------|-------------|
@@ -390,6 +434,8 @@ make test
 # Test with Docker
 make test-docker
 ```
+
+See [Makefile](Makefile) for all available development commands.
 
 ## Supported Databases
 
