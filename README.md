@@ -15,6 +15,8 @@ Build your own migration CLI with it.
 
 Standard library [**`database/sql`**](https://pkg.go.dev/database/sql) and [**`sqlx`**](https://github.com/jmoiron/sqlx) supported out of the box.
 
+See the [examples](https://github.com/padurean/gosmig/tree/examples) for usage with both.
+
 Can be used with any database library that implements the standard interfaces.
 
 ## Features
@@ -199,6 +201,8 @@ func connectToSQLXDB(url string, timeout time.Duration) (*sqlx.DB, error) {
     return db, nil
 }
 ```
+
+💡 Check the [examples](https://github.com/padurean/gosmig/tree/examples) branch for more complete examples.
 
 ## CLI Usage
 
@@ -529,11 +533,12 @@ This project is released into the public domain under the [Unlicense](http://unl
 
 ## Changelog
 
-### v1.0.0 (Current)
+### v0.0.1 (Current)
 
 - Initial release
 - Support for both transactional and non-transactional migrations
-- CLI interface with up, up-one, down, status, and version commands
+- CLI interface with `up`, `up-one`, `down`, `status`, and `version` commands
 - Full Go generics support
-- Support for database/sql and sqlx
+- Support for [**`database/sql`**](https://pkg.go.dev/database/sql) and [**`sqlx`**](https://github.com/jmoiron/sqlx) out of the box
+- Other database libraries supported via [interfaces](#core-types)
 - Comprehensive test suite
