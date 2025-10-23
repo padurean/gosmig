@@ -2,6 +2,9 @@ module github.com/padurean/gosmig
 
 go 1.25.3
 
+// published unintentionally
+retract v1.0.0
+
 require (
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/jmoiron/sqlx v1.4.0
