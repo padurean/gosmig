@@ -14,7 +14,7 @@ func DefaultConfig() *Config {
 	}
 }
 
-func (c *Config) EnsureDefaults() {
+func (c *Config) ensureDefaults() {
 	if c.Timeout <= 0 {
 		c.Timeout = defaultTimeout
 	}

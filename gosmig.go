@@ -158,7 +158,7 @@ func newGosmig[
 	if config == nil {
 		config = DefaultConfig()
 	} else {
-		config.EnsureDefaults()
+		config.ensureDefaults()
 	}
 
 	if getArgs == nil {
